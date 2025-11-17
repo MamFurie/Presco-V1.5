@@ -1,0 +1,61 @@
+body { 
+    font-family: Arial; 
+    background: #f0f0f0; 
+    padding: 10px; 
+    margin: 0; 
+}
+
+
+h1 { 
+    color: #0066FF; 
+    text-align: center; 
+    font-size: 24px; 
+}
+
+
+#classSelect { 
+    width: 100%; 
+    padding: 10px; 
+    margin: 10px 0; 
+    font-size: 16px; 
+}
+
+
+.student { 
+    padding: 15px; 
+    margin: 5px 0; 
+    background: white; 
+    cursor: pointer; 
+    border-radius: 5px; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+}
+
+
+.student.present { 
+    background: #4CAF50; 
+    color: white; 
+}
+
+
+.student.absent { 
+    background: #f44336; 
+    color: white; 
+}
+
+
+button { 
+    width: 100%; 
+    padding: 15px; 
+    margin-top: 20px; 
+    background: #0066FF; 
+    color: white; 
+    border: none; 
+    border-radius: 5px; 
+    cursor: pointer; 
+    font-size: 16px; 
+}
+
+
+#configPanel { 
+    margin-top: 15px; 
+}

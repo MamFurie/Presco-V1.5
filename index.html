@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Presco - Présences</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>🎓 Presco - <span id="classDisplay">CE1A</span></h1>
+  
+  <!-- SÉLECTEUR DE CLASSE -->
+  <label for="classSelect">Choisir la classe :</label>
+  <select id="classSelect" onchange="changeClass()">
+    <option value="CE1A">CE1 A</option>
+    <option value="CE1B">CE1 B</option>
+    <option value="CE1C">CE1 C</option>
+    <option value="CM1">CM1</option>
+    <option value="CM2">CM2</option>
+    <option value="6EME">6ème</option>
+    <option value="5EME">5ème</option>
+    <option value="4EME">4ème</option>
+    <option value="3EME">3ème</option>
+  </select>
+  
+  <!-- BOUTON CONFIG ÉLÈVES -->
+  <button onclick="showConfig()">⚙️ Configurer élèves</button>
+  
+  <!-- PANNEAU DE CONFIG -->
+  <div id="configPanel" style="display:none; background:white; padding:15px; margin:10px 0;">
+    <h3>Élèves de <span id="configClassName">CE1A</span> (un par ligne)</h3>
+    <textarea id="studentNames" rows="10" style="width:100%;"></textarea>
+    <button onclick="saveConfig()">💾 Sauvegarder</button>
+  </div>
+  
+  <div id="app"></div>
+  
+  <button onclick="exportCSV()">📤 Exporter CSV</button>
+  <button onclick="sendWhatsApp()">📱 Envoyer WhatsApp</button>
+  
+  <script src="app.js"></script>
+</body>
+</html>
