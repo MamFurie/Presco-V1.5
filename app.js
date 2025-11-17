@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('classDisplay').textContent = currentClass;
   document.getElementById('configClassName').textContent = currentClass;
   loadStudents();
+  loadPresenceStatus(); // ✅ Nouvelle fonction pour charger les statuts
   renderStudents();
 });
 
@@ -20,6 +21,7 @@ function changeClass() {
   
   // Recharger les élèves pour cette classe
   loadStudents();
+  loadPresenceStatus(); // ✅ Recharger les statuts de présence
   renderStudents();
   
   // Recharger le panneau de config si ouvert
@@ -82,9 +84,13 @@ function loadStudents() {
 
 // === GESTION DES PRÉSENCES ===
 
-const today = new Date().toISOString().split('T')[0];
-const presenceKey = `presco-${currentClass}-${today}`;
-let status = JSON.parse(localStorage.getItem(presenceKey)) || {};
+let status = {}; // ✅ Déplacé ici pour être réinitialisé à chaque changement
+
+function loadPresenceStatus() {
+  const today = new Date().toISOString().split('T')[0];
+  const presenceKey = `presco-${currentClass}-${today}`;
+  status = JSON.parse(localStorage.getItem(presenceKey)) || {};
+}
 
 const app = document.getElementById('app');
 
@@ -107,14 +113,16 @@ function toggle(name, div) {
     status[name] = 'present';
     div.className = 'student present';
   }
+  // ✅ Sauvegarder avec la bonne clé
+  const today = new Date().toISOString().split('T')[0];
+  const presenceKey = `presco-${currentClass}-${today}`;
   localStorage.setItem(presenceKey, JSON.stringify(status));
 }
-
-renderStudents();
 
 // === EXPORT ===
 
 function exportCSV() {
+  const today = new Date().toISOString().split('T')[0]; // ✅ Ajouté ici
   let csv = `Classe,${currentClass}\nDate,${today}\n\nNom,Statut\n`;
   students.forEach(name => {
     const etat = status[name] === 'present' ? 'Présent' : 
@@ -130,6 +138,7 @@ function exportCSV() {
 }
 
 function sendWhatsApp() {
+  const today = new Date().toISOString().split('T')[0]; // ✅ Ajouté ici
   let message = `*Presco - ${currentClass} - ${today}*\n\n`;
   students.forEach(name => {
     const symbol = status[name] === 'present' ? '[P] ' : 
