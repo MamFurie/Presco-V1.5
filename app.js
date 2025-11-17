@@ -1,3 +1,77 @@
+// ===========================================
+// 📝 MODIFIEZ CETTE SECTION AVEC VOS ÉLÈVES
+// ===========================================
+
+const DEFAULT_STUDENTS = {
+  'CE1A': [
+    'Marie Dubois',
+    'Lucas Martin',
+    'Emma Petit',
+    'Hugo Bernard',
+    'Camille Thomas'
+  ],
+  'CE1B': [
+    'Léa Richard',
+    'Gabriel Moreau',
+    'Jade Lefevre',
+    'Nathan Roux',
+    'Inès Garcia'
+  ],
+  'CE1C': [
+    'Tom Petit',
+    'Lola Simon',
+    'Raphaël Laurent',
+    'Inès Michel',
+    'Louis Fernandez'
+  ],
+  'CM1': [
+    'Arthur Simon',
+    'Clara Laurent',
+    'Marius Michel',
+    'Zoé Fernandez',
+    'Tom Chevalier'
+  ],
+  'CM2': [
+    'Nina Girard',
+    'Enzo Lemoine',
+    'Lilou Renaud',
+    'Adam Dumont',
+    'Nora Leroy'
+  ],
+  '6EME': [
+    'Alice Petit',
+    'Louis Morel',
+    'Chloé Rousseau',
+    'Mathis Girard',
+    'Manon Lemoine'
+  ],
+  '5EME': [
+    'Jade Petit',
+    'Hugo Morel',
+    'Léa Rousseau',
+    'Lucas Girard',
+    'Emma Lemoine'
+  ],
+  '4EME': [
+    'Inès Petit',
+    'Nathan Morel',
+    'Zoé Rousseau',
+    'Tom Girard',
+    'Camille Lemoine'
+  ],
+  '3EME': [
+    'Lola Petit',
+    'Raphaël Morel',
+    'Nina Rousseau',
+    'Arthur Girard',
+    'Clara Lemoine'
+  ]
+};
+
+// ===========================================
+// ⬆️ FIN DE LA SECTION À MODIFIER
+// ===========================================
+
 // === GESTION DE LA CLASSE ===
 
 let currentClass = localStorage.getItem('presco-current-class') || 'CE1A';
@@ -8,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('classDisplay').textContent = currentClass;
   document.getElementById('configClassName').textContent = currentClass;
   loadStudents();
-  loadPresenceStatus(); // ✅ Nouvelle fonction pour charger les statuts
+  loadPresenceStatus();
   renderStudents();
 });
 
@@ -19,12 +93,10 @@ function changeClass() {
   document.getElementById('classDisplay').textContent = currentClass;
   document.getElementById('configClassName').textContent = currentClass;
   
-  // Recharger les élèves pour cette classe
   loadStudents();
-  loadPresenceStatus(); // ✅ Recharger les statuts de présence
+  loadPresenceStatus();
   renderStudents();
   
-  // Recharger le panneau de config si ouvert
   const panel = document.getElementById('configPanel');
   if (panel.style.display !== 'none') {
     showConfig();
@@ -37,7 +109,6 @@ function showConfig() {
   const panel = document.getElementById('configPanel');
   const textarea = document.getElementById('studentNames');
   
-  // Charger les noms de la classe actuelle
   const storageKey = `students-${currentClass}`;
   const existing = localStorage.getItem(storageKey);
   textarea.value = existing || '';
@@ -54,16 +125,24 @@ function saveConfig() {
     return;
   }
   
-  // Sauvegarder pour la classe actuelle
   localStorage.setItem(`students-${currentClass}`, namesText);
   localStorage.setItem(`students-array-${currentClass}`, JSON.stringify(namesArray));
   
   alert(`✅ ${namesArray.length} élèves sauvegardés pour ${currentClass} !`);
   document.getElementById('configPanel').style.display = 'none';
   
-  // Recharger la liste
   loadStudents();
   renderStudents();
+}
+
+function resetStudents() {
+  if (confirm('⚠️ Réinitialiser les noms aux valeurs par défaut ?\n\nCela effacera les modifications manuelles.')) {
+    localStorage.removeItem(`students-array-${currentClass}`);
+    localStorage.removeItem(`students-${currentClass}`);
+    loadStudents();
+    renderStudents();
+    alert('✅ Noms réinitialisés !');
+  }
 }
 
 // === CHARGEMENT DES ÉLÈVES ===
@@ -73,18 +152,25 @@ let students = [];
 function loadStudents() {
   const storageKey = `students-array-${currentClass}`;
   const saved = localStorage.getItem(storageKey);
-  students = saved ? JSON.parse(saved) : [
-    'Élève 1',
-    'Élève 2', 
-    'Élève 3',
-    'Élève 4',
-    'Élève 5'
-  ];
+  
+  if (saved) {
+    // Utiliser les noms sauvegardés (priorité)
+    students = JSON.parse(saved);
+  } else if (DEFAULT_STUDENTS[currentClass]) {
+    // Utiliser les noms pré-définis pour cette classe
+    students = DEFAULT_STUDENTS[currentClass];
+    // Sauvegarde automatique dans localStorage
+    localStorage.setItem(storageKey, JSON.stringify(students));
+    localStorage.setItem(`students-${currentClass}`, students.join('\n'));
+  } else {
+    // Backup : noms génériques
+    students = ['Élève 1', 'Élève 2', 'Élève 3', 'Élève 4', 'Élève 5'];
+  }
 }
 
 // === GESTION DES PRÉSENCES ===
 
-let status = {}; // ✅ Déplacé ici pour être réinitialisé à chaque changement
+let status = {};
 
 function loadPresenceStatus() {
   const today = new Date().toISOString().split('T')[0];
@@ -92,9 +178,8 @@ function loadPresenceStatus() {
   status = JSON.parse(localStorage.getItem(presenceKey)) || {};
 }
 
-const app = document.getElementById('app');
-
 function renderStudents() {
+  const app = document.getElementById('app');
   app.innerHTML = '';
   students.forEach(name => {
     const div = document.createElement('div');
@@ -113,7 +198,6 @@ function toggle(name, div) {
     status[name] = 'present';
     div.className = 'student present';
   }
-  // ✅ Sauvegarder avec la bonne clé
   const today = new Date().toISOString().split('T')[0];
   const presenceKey = `presco-${currentClass}-${today}`;
   localStorage.setItem(presenceKey, JSON.stringify(status));
@@ -122,7 +206,7 @@ function toggle(name, div) {
 // === EXPORT ===
 
 function exportCSV() {
-  const today = new Date().toISOString().split('T')[0]; // ✅ Ajouté ici
+  const today = new Date().toISOString().split('T')[0];
   let csv = `Classe,${currentClass}\nDate,${today}\n\nNom,Statut\n`;
   students.forEach(name => {
     const etat = status[name] === 'present' ? 'Présent' : 
@@ -138,7 +222,7 @@ function exportCSV() {
 }
 
 function sendWhatsApp() {
-  const today = new Date().toISOString().split('T')[0]; // ✅ Ajouté ici
+  const today = new Date().toISOString().split('T')[0];
   let message = `*Presco - ${currentClass} - ${today}*\n\n`;
   students.forEach(name => {
     const symbol = status[name] === 'present' ? '[P] ' : 
