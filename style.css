@@ -59,3 +59,45 @@ button {
 #configPanel { 
     margin-top: 15px; 
 }
+
+/* Styles pour le panneau de statistiques */
+#statsPanel {
+  margin-top: 20px;
+  background: #f8f9fa;
+  border: 2px solid #0066FF;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+#statsContent h4 {
+  color: #0066FF;
+  margin-bottom: 15px;
+  font-size: 18px;
+}
+
+#statsContent table {
+  font-size: 14px;
+}
+
+#statsContent button {
+  margin: 5px;
+  padding: 10px 15px;
+  background: #28a745;
+  font-size: 14px;
+}
+
+#statsContent button:hover {
+  background: #218838;
+}
+
+/* Boutons de période */
+#statsContent > div:first-child {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0;
+}
+
+/* Couleurs selon le taux d'absence */
+.tr-low { background-color: #d4edda !important; }
+.tr-medium { background-color: #fff3cd !important; }
+.tr-high { background-color: #f8d7da !important; }
