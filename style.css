@@ -101,3 +101,35 @@ button {
 .tr-low { background-color: #d4edda !important; }
 .tr-medium { background-color: #fff3cd !important; }
 .tr-high { background-color: #f8d7da !important; }
+
+/* Boutons de période */
+.period-btn {
+  flex: 1;
+  min-width: 100px;
+  padding: 10px 5px !important;
+  font-size: 14px !important;
+  margin: 0 !important;
+}
+
+/* Panneau stats */
+#statsPanel {
+  background: #f8f9fa;
+  border: 2px solid #0066FF;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  margin-top: 20px;
+}
+
+#statsContent h4 {
+  color: #0066FF;
+  margin-bottom: 15px;
+  font-size: 1.2em;
+}
+
+#statsContent table {
+  font-size: 14px;
+}
+
+#statsContent td {
+  border-bottom: 1px solid #ddd;
+}

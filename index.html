@@ -32,28 +32,28 @@
     <h3>Élèves de <span id="configClassName">CE1A</span> (un par ligne)</h3>
     <textarea id="studentNames" rows="10" style="width:100%;"></textarea>
     <button onclick="saveConfig()">💾 Sauvegarder</button>
+    <button onclick="resetStudents()">🔄 Réinitialiser noms</button>
   </div>
   
   <div id="app"></div>
-  <button onclick="exportCSV()">📤 Exporter CSV</button>
-  <button onclick="sendWhatsApp()">📱 Envoyer WhatsApp</button>
-
-  <!-- Boutons de statistiques -->
-<button onclick="showStats()">📊 Statistiques</button>
-<button onclick="exportStats()">📈 Export Stats</button>
-
-<!-- Panneau de statistiques -->
-<div id="statsPanel" style="display:none; background:#f0f8ff; padding:15px; margin:10px 0; border-radius:8px;">
-  <h3>📊 Statistiques - <span id="statsClass">CE1A</span></h3>
   
-  <div style="display:flex; gap:20px; margin:10px 0;">
-    <button onclick="showPeriod('week')">Cette semaine</button>
-    <button onclick="showPeriod('month')">Ce mois</button>
-    <button onclick="showPeriod('quarter')">Ce trimestre</button>
+  <!-- BOUTONS D'ACTION -->
+  <button onclick="exportCSV()">📤 Exporter CSV du jour</button>
+  <button onclick="showStats()">📊 Statistiques</button>
+  <button onclick="exportStats()">📈 Export Stats complet</button>
+  
+  <!-- PANNEAU DE STATISTIQUES -->
+  <div id="statsPanel" style="display:none; background:#f0f8ff; padding:15px; margin:10px 0; border-radius:8px;">
+    <h3>📊 Statistiques - <span id="statsClass">CE1A</span></h3>
+    
+    <div style="display:flex; gap:10px; margin:10px 0; flex-wrap:wrap;">
+      <button onclick="showPeriod('week')" class="period-btn">Cette semaine</button>
+      <button onclick="showPeriod('month')" class="period-btn">Ce mois</button>
+      <button onclick="showPeriod('quarter')" class="period-btn">Ce trimestre</button>
+    </div>
+    
+    <div id="statsContent"></div>
   </div>
-  
-  <div id="statsContent"></div>
-</div>
   
   <script src="app.js"></script>
 </body>

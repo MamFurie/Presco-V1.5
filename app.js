@@ -17,6 +17,13 @@ const DEFAULT_STUDENTS = {
     'Nathan Roux',
     'Inès Garcia'
   ],
+  'CE1C': [
+    'Tom Petit',
+    'Lola Simon',
+    'Raphaël Laurent',
+    'Inès Michel',
+    'Louis Fernandez'
+  ],
   'CM1': [
     'Arthur Simon',
     'Clara Laurent',
@@ -24,12 +31,40 @@ const DEFAULT_STUDENTS = {
     'Zoé Fernandez',
     'Tom Chevalier'
   ],
+  'CM2': [
+    'Nina Girard',
+    'Enzo Lemoine',
+    'Lilou Renaud',
+    'Adam Dumont',
+    'Nora Leroy'
+  ],
   '6EME': [
     'Alice Petit',
     'Louis Morel',
     'Chloé Rousseau',
     'Mathis Girard',
     'Manon Lemoine'
+  ],
+  '5EME': [
+    'Jade Petit',
+    'Hugo Morel',
+    'Léa Rousseau',
+    'Lucas Girard',
+    'Emma Lemoine'
+  ],
+  '4EME': [
+    'Inès Petit',
+    'Nathan Morel',
+    'Zoé Rousseau',
+    'Tom Girard',
+    'Camille Lemoine'
+  ],
+  '3EME': [
+    'Lola Petit',
+    'Raphaël Morel',
+    'Nina Rousseau',
+    'Arthur Girard',
+    'Clara Lemoine'
   ]
 };
 
@@ -179,6 +214,7 @@ function renderStudents() {
   });
 }
 
+// === ACTUALISATION AUTOMATIQUE DÉJÀ PRÉSENTE ===
 function toggle(name, div) {
   if (!status[name] || status[name] === 'present') {
     status[name] = 'absent';
@@ -190,6 +226,8 @@ function toggle(name, div) {
   const today = new Date().toISOString().split('T')[0];
   const presenceKey = `presco-${currentClass}-${today}`;
   localStorage.setItem(presenceKey, JSON.stringify(status));
+  // La ligne ci-dessus sauvegarde automatiquement
+  // renderStudents() est appelé à chaque toggle via le DOM
 }
 
 // === STATISTIQUES ===
@@ -225,9 +263,13 @@ function showPeriod(period) {
       break;
   }
   
-  // Compter les absences par élève
+  // Compter les absences ET présences par élève
   const absences = {};
-  students.forEach(name => absences[name] = 0);
+  const presences = {};
+  students.forEach(name => {
+    absences[name] = 0;
+    presences[name] = 0;
+  });
   
   // Parcourir toutes les dates de la période
   const startDate = period === 'week' ? getStartOfWeek(now) :
@@ -246,30 +288,32 @@ function showPeriod(period) {
     students.forEach(name => {
       if (dayStatus[name] === 'absent') {
         absences[name]++;
+      } else if (dayStatus[name] === 'present') {
+        presences[name]++;
       }
     });
   }
   
-  // Calculer total et moyenne
+  // Calculer totaux
   const totalAbsences = Object.values(absences).reduce((a, b) => a + b, 0);
-  const moyenneAbsences = (totalAbsences / students.length).toFixed(1);
+  const totalPresences = Object.values(presences).reduce((a, b) => a + b, 0);
   const joursTravailles = getWorkingDays(startDate, endDate);
   
   // Afficher les résultats
   let html = `
     <h4>📊 Statistiques ${periodName}</h4>
     <div style="background:#e8f4f8; padding:10px; border-radius:5px; margin:10px 0;">
-      <p><strong>📈 Total absences :</strong> ${totalAbsences}</p>
-      <p><strong>📉 Moyenne par élève :</strong> ${moyenneAbsences} absences</p>
+      <p><strong>📉 Absences totales :</strong> ${totalAbsences}</p>
+      <p><strong>✅ Présences totales :</strong> ${totalPresences}</p>
       <p><strong>📅 Jours travaillés :</strong> ${joursTravailles} jours</p>
     </div>
     <h5>📋 Détails par élève :</h5>
-    <table style="width:100%; border-collapse:collapse; margin-top:10px;">
+    <table style="width:100%; border-collapse:collapse; margin-top:10px; font-size:12px;">
       <thead>
         <tr style="background:#0066FF; color:white;">
           <th style="padding:8px; text-align:left;">Élève</th>
-          <th style="padding:8px; text-align:center;">Absences</th>
-          <th style="padding:8px; text-align:center;">%</th>
+          <th style="padding:8px; text-align:center; width:80px;">Absences</th>
+          <th style="padding:8px; text-center; width:80px;">Présences</th>
         </tr>
       </thead>
       <tbody>
@@ -278,14 +322,14 @@ function showPeriod(period) {
   // Trier par nombre d'absences (desc)
   const sortedStudents = Object.entries(absences).sort((a, b) => b[1] - a[1]);
   
-  sortedStudents.forEach(([name, count]) => {
-    const pourcentage = ((count / joursTravailles) * 100).toFixed(1);
-    const color = count >= 3 ? '#ff6b6b' : count >= 1 ? '#ffa726' : '#66bb6a';
+  sortedStudents.forEach(([name, absCount]) => {
+    const presCount = presences[name];
+    const color = absCount >= 3 ? '#ff6b6b' : absCount >= 1 ? '#ffa726' : '#66bb6a';
     html += `
       <tr style="background:${color}20; border-bottom:1px solid #ddd;">
         <td style="padding:8px;">${name}</td>
-        <td style="padding:8px; text-align:center; font-weight:bold;">${count}</td>
-        <td style="padding:8px; text-align:center;">${pourcentage}%</td>
+        <td style="padding:8px; text-align:center; font-weight:bold; color:#d32f2f;">${absCount}</td>
+        <td style="padding:8px; text-align:center; font-weight:bold; color:#388e3c;">${presCount}</td>
       </tr>
     `;
   });
@@ -301,7 +345,7 @@ function getWorkingDays(startDate, endDate) {
   const current = new Date(startDate);
   while (current <= endDate) {
     const dayOfWeek = current.getDay();
-    if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Pas dimanche (0) ni samedi (6)
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
       count++;
     }
     current.setDate(current.getDate() + 1);
@@ -312,7 +356,7 @@ function getWorkingDays(startDate, endDate) {
 function getStartOfWeek(date) {
   const d = new Date(date);
   const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Lundi = début de semaine
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
   return new Date(d.setDate(diff));
 }
 
@@ -340,26 +384,23 @@ function getEndOfQuarter(date) {
 
 function exportStats() {
   const now = new Date();
-  const weekKey = getWeekKey(now);
-  const monthKey = getMonthKey(now);
-  const quarterKey = getQuarterKey(now);
-  
   let csv = `STATISTIQUES D'ABSENCES - ${currentClass}\n`;
   csv += `Exporté le : ${now.toLocaleString('fr-FR')}\n\n`;
   
   // Export semaine
-  csv += `📅 SEMAINE ${weekKey}\n`;
+  csv += `📅 SEMAINE ${getWeekKey(now)}\n`;
   csv += exportPeriodStats('week');
+  csv += `\n`;
   
   // Export mois
-  csv += `\n📅 MOIS ${monthKey}\n`;
+  csv += `📅 MOIS ${getMonthKey(now)}\n`;
   csv += exportPeriodStats('month');
+  csv += `\n`;
   
   // Export trimestre
-  csv += `\n📅 TRIMESTRE ${quarterKey}\n`;
+  csv += `📅 TRIMESTRE ${getQuarterKey(now)}\n`;
   csv += exportPeriodStats('quarter');
   
-  // Télécharger le CSV
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -370,23 +411,6 @@ function exportStats() {
 
 function exportPeriodStats(period) {
   const now = new Date();
-  let periodKey, periodName;
-  
-  switch(period) {
-    case 'week':
-      periodKey = getWeekKey(now);
-      periodName = 'Semaine';
-      break;
-    case 'month':
-      periodKey = getMonthKey(now);
-      periodName = 'Mois';
-      break;
-    case 'quarter':
-      periodKey = getQuarterKey(now);
-      periodName = 'Trimestre';
-      break;
-  }
-  
   const startDate = period === 'week' ? getStartOfWeek(now) :
                    period === 'month' ? new Date(now.getFullYear(), now.getMonth(), 1) :
                    getStartOfQuarter(now);
@@ -395,9 +419,12 @@ function exportPeriodStats(period) {
                   period === 'month' ? new Date(now.getFullYear(), now.getMonth() + 1, 0) :
                   getEndOfQuarter(now);
   
-  // Compter les absences
   const absences = {};
-  students.forEach(name => absences[name] = 0);
+  const presences = {};
+  students.forEach(name => {
+    absences[name] = 0;
+    presences[name] = 0;
+  });
   
   for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
     const dateKey = d.toISOString().split('T')[0];
@@ -405,30 +432,26 @@ function exportPeriodStats(period) {
     const dayStatus = JSON.parse(localStorage.getItem(presenceKey)) || {};
     
     students.forEach(name => {
-      if (dayStatus[name] === 'absent') {
-        absences[name]++;
-      }
+      if (dayStatus[name] === 'absent') absences[name]++;
+      else if (dayStatus[name] === 'present') presences[name]++;
     });
   }
   
   const totalAbsences = Object.values(absences).reduce((a, b) => a + b, 0);
-  const joursTravailles = getWorkingDays(startDate, endDate);
+  const totalPresences = Object.values(presences).reduce((a, b) => a + b, 0);
   
-  let csv = `Élève,Absences,Pourcentage\n`;
-  
+  let csv = `Élève,Absences,Présences\n`;
   const sortedStudents = Object.entries(absences).sort((a, b) => b[1] - a[1]);
-  sortedStudents.forEach(([name, count]) => {
-    const pourcentage = ((count / joursTravailles) * 100).toFixed(1);
-    csv += `${name},${count},${pourcentage}%\n`;
+  
+  sortedStudents.forEach(([name, absCount]) => {
+    csv += `${name},${absCount},${presences[name]}\n`;
   });
   
-  csv += `\nTotal absences,${totalAbsences},\n`;
-  csv += `Moyenne par élève,${(totalAbsences / students.length).toFixed(1)},\n`;
-  
+  csv += `\nTOTAL,${totalAbsences},${totalPresences}\n`;
   return csv;
 }
 
-// === EXPORT CLASSIQUE ===
+// === EXPORT DU JOUR ===
 
 function exportCSV() {
   const today = new Date().toISOString().split('T')[0];
@@ -444,18 +467,6 @@ function exportCSV() {
   a.href = url;
   a.download = `presco-${currentClass}-${today}.csv`;
   a.click();
-}
-
-function sendWhatsApp() {
-  const today = new Date().toISOString().split('T')[0];
-  let message = `*Presco - ${currentClass} - ${today}*\n\n`;
-  students.forEach(name => {
-    const symbol = status[name] === 'present' ? '[P] ' : 
-                   status[name] === 'absent'  ? '[A] ' : '[N] ';
-    message += `${symbol}${name}\n`;
-  });
-  const encoded = encodeURIComponent(message);
-  window.open(`https://wa.me/?text=${encoded}`, '_blank');
 }
 
 // === SERVICE WORKER ===
