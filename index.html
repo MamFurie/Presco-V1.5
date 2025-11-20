@@ -8,53 +8,77 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>🎓 Presco - <span id="classDisplay">CE1A</span></h1>
-  
-  <!-- SÉLECTEUR DE CLASSE -->
-  <label for="classSelect">Choisir la classe :</label>
-  <select id="classSelect" onchange="changeClass()">
-    <option value="CE1A">CE1 A</option>
-    <option value="CE1B">CE1 B</option>
-    <option value="CE1C">CE1 C</option>
-    <option value="CM1">CM1</option>
-    <option value="CM2">CM2</option>
-    <option value="6EME">6ème</option>
-    <option value="5EME">5ème</option>
-    <option value="4EME">4ème</option>
-    <option value="3EME">3ème</option>
-  </select>
-  
-  <!-- BOUTON CONFIG ÉLÈVES -->
-  <button onclick="showConfig()">⚙️ Configurer élèves</button>
-  
-  <!-- PANNEAU DE CONFIG -->
-  <div id="configPanel" style="display:none; background:white; padding:15px; margin:10px 0;">
-    <h3>Élèves de <span id="configClassName">CE1A</span> (un par ligne)</h3>
-    <textarea id="studentNames" rows="10" style="width:100%;"></textarea>
-    <button onclick="saveConfig()">💾 Sauvegarder</button>
-    <button onclick="resetStudents()">🔄 Réinitialiser noms</button>
+  <!-- EN-TÊTE -->
+  <header class="header">
+    <h1>🎓 Presco</h1>
+    <p class="subtitle">Gestion des présences</p>
+  </header>
+
+  <!-- LICENCE & ACCÈS -->
+  <div id="licensePanel" class="license-panel">
+    <p>🏫 <span id="schoolName">École</span></p>
+    <p>Code : <span id="licenseCode">----</span></p>
   </div>
-  
-  <div id="app"></div>
-  
-  <!-- BOUTONS D'ACTION -->
-  <button onclick="exportCSV()">📤 Exporter CSV du jour</button>
-  <button onclick="showStats()">📊 Statistiques</button>
-  <button onclick="exportStats()">📈 Export Stats complet</button>
-  
-  <!-- PANNEAU DE STATISTIQUES -->
-  <div id="statsPanel" style="display:none; background:#f0f8ff; padding:15px; margin:10px 0; border-radius:8px;">
-    <h3>📊 Statistiques - <span id="statsClass">CE1A</span></h3>
-    
-    <div style="display:flex; gap:10px; margin:10px 0; flex-wrap:wrap;">
-      <button onclick="showPeriod('week')" class="period-btn">Cette semaine</button>
-      <button onclick="showPeriod('month')" class="period-btn">Ce mois</button>
-      <button onclick="showPeriod('quarter')" class="period-btn">Ce trimestre</button>
+
+  <!-- MENU DE NAVIGATION -->
+  <nav class="main-nav">
+    <button class="nav-btn active" onclick="showSection('presences')">
+      📋 Présences
+    </button>
+    <button class="nav-btn" onclick="showSection('stats')">
+      📊 Statistiques
+    </button>
+    <button class="nav-btn" onclick="showSection('export')">
+      📤 Exports
+    </button>
+  </nav>
+
+  <!-- SECTION PRÉSENCES -->
+  <section id="presences" class="section active">
+    <!-- BANDEAU TOTAUX -->
+    <div class="totals-bar">
+      <div class="total-box">
+        <div class="number" id="totalStudents">0</div>
+        <div class="label">Élèves</div>
+      </div>
+      <div class="total-box">
+        <div class="number present" id="totalPresent">0</div>
+        <div class="label">Présents</div>
+      </div>
+      <div class="total-box">
+        <div class="number absent" id="totalAbsent">0</div>
+        <div class="label">Absents</div>
+      </div>
     </div>
-    
+
+    <!-- LISTE DES ÉLÈVES -->
+    <div id="studentsList" class="students-list"></div>
+  </section>
+
+  <!-- SECTION STATISTIQUES -->
+  <section id="stats" class="section">
+    <h2>📊 Statistiques</h2>
+    <div class="period-selector">
+      <button class="period-btn" onclick="showPeriod('week')">Semaine</button>
+      <button class="period-btn" onclick="showPeriod('month')">Mois</button>
+      <button class="period-btn" onclick="showPeriod('quarter')">Trimestre</button>
+    </div>
     <div id="statsContent"></div>
-  </div>
-  
+  </section>
+
+  <!-- SECTION EXPORTS -->
+  <section id="export" class="section">
+    <h2>📤 Exports</h2>
+    <div class="export-buttons">
+      <button class="export-btn primary" onclick="exportCSV()">
+        📄 CSV du jour
+      </button>
+      <button class="export-btn secondary" onclick="exportStats()">
+        📈 Stats complètes
+      </button>
+    </div>
+  </section>
+
   <script src="app.js"></script>
 </body>
 </html>

@@ -1,277 +1,128 @@
 // ===========================================
-// 📝 MODIFIEZ CETTE SECTION AVEC VOS ÉLÈVES
+// 🏫 LICENCES PAR ÉCOLE (À PERSONNALISER)
 // ===========================================
 
-const DEFAULT_STUDENTS = {
-  'CE1A': [
-    'Marie Dubois',
-    'Lucas Martin',
-    'Emma Petit',
-    'Hugo Bernard',
-    'Camille Thomas'
-  ],
-  'CE1B': [
-    'Léa Richard',
-    'Gabriel Moreau',
-    'Jade Lefevre',
-    'Nathan Roux',
-    'Inès Garcia'
-  ],
-  'CE1C': [
-    'Tom Petit',
-    'Lola Simon',
-    'Raphaël Laurent',
-    'Inès Michel',
-    'Louis Fernandez'
-  ],
-  'CM1': [
-    'Arthur Simon',
-    'Clara Laurent',
-    'Marius Michel',
-    'Zoé Fernandez',
-    'Tom Chevalier'
-  ],
-  'CM2': [
-    'Nina Girard',
-    'Enzo Lemoine',
-    'Lilou Renaud',
-    'Adam Dumont',
-    'Nora Leroy'
-  ],
-  '6EME': [
-    'Alice Petit',
-    'Louis Morel',
-    'Chloé Rousseau',
-    'Mathis Girard',
-    'Manon Lemoine'
-  ],
-  '5EME': [
-    'Jade Petit',
-    'Hugo Morel',
-    'Léa Rousseau',
-    'Lucas Girard',
-    'Emma Lemoine'
-  ],
-  '4EME': [
-    'Inès Petit',
-    'Nathan Morel',
-    'Zoé Rousseau',
-    'Tom Girard',
-    'Camille Lemoine'
-  ],
-  '3EME': [
-    'Lola Petit',
-    'Raphaël Morel',
-    'Nina Rousseau',
-    'Arthur Girard',
-    'Clara Lemoine'
-  ]
+const LICENSES = {
+  // Exemple : École Primaire Les Cygnes
+  'ECOLE-CYGNE-2024': {
+    nom: 'École Primaire Les Cygnes',
+    classes: ['CE1A', 'CE1B', 'CM1', 'CM2'],
+    expire: '2025-12-31',
+    accessCodes: {
+      'CE1A': '7845',
+      'CE1B': '1234',
+      'CM1': '5678',
+      'CM2': '9012'
+    }
+  },
+  
+  // Ajoutez d'autres écoles ici
+  'ECOLE-LUMIERE-2024': {
+    nom: 'École Primaire Lumière',
+    classes: ['CE1A', 'CE1B', 'CE1C'],
+    expire: '2025-06-30',
+    accessCodes: {
+      'CE1A': '1111',
+      'CE1B': '2222',
+      'CE1C': '3333'
+    }
+  }
 };
 
 // ===========================================
-// ⬆️ FIN DE LA SECTION À MODIFIER
+// 📝 ÉLÈVES PAR CLASSE (NON MODIFIABLES)
 // ===========================================
 
-// === UTILITAIRES DATES ===
+const DEFAULT_STUDENTS = {
+  'CE1A': ['Marie Dubois', 'Lucas Martin', 'Emma Petit', 'Hugo Bernard', 'Camille Thomas'],
+  'CE1B': ['Léa Richard', 'Gabriel Moreau', 'Jade Lefevre', 'Nathan Roux', 'Inès Garcia'],
+  'CE1C': ['Tom Petit', 'Lola Simon', 'Raphaël Laurent', 'Inès Michel', 'Louis Fernandez'],
+  'CM1': ['Arthur Simon', 'Clara Laurent', 'Marius Michel', 'Zoé Fernandez', 'Tom Chevalier'],
+  'CM2': ['Nina Girard', 'Enzo Lemoine', 'Lilou Renaud', 'Adam Dumont', 'Nora Leroy'],
+  '6EME': ['Alice Petit', 'Louis Morel', 'Chloé Rousseau', 'Mathis Girard', 'Manon Lemoine'],
+  '5EME': ['Jade Petit', 'Hugo Morel', 'Léa Rousseau', 'Lucas Girard', 'Emma Lemoine'],
+  '4EME': ['Inès Petit', 'Nathan Morel', 'Zoé Rousseau', 'Tom Girard', 'Camille Lemoine'],
+  '3EME': ['Lola Petit', 'Raphaël Morel', 'Nina Rousseau', 'Arthur Girard', 'Clara Lemoine']
+};
 
-function getWeekKey(date) {
-  const d = new Date(date);
-  const week = getWeekNumber(d);
-  return `${d.getFullYear()}-W${week}`;
-}
+// ===========================================
+// 🔐 SÉCURITÉ & GESTION DES LICENCES
+// ===========================================
 
-function getWeekNumber(d) {
-  d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
-  const weekNo = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
-  return weekNo;
-}
-
-function getMonthKey(date) {
-  const d = new Date(date);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-}
-
-function getQuarterKey(date) {
-  const d = new Date(date);
-  const quarter = Math.ceil((d.getMonth() + 1) / 3);
-  return `${d.getFullYear()}-Q${quarter}`;
-}
-
-// === GESTION DE LA CLASSE ===
-
+let currentLicense = null;
 let currentClass = localStorage.getItem('presco-current-class') || 'CE1A';
 
-// Initialisation au chargement
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('classSelect').value = currentClass;
-  document.getElementById('classDisplay').textContent = currentClass;
-  document.getElementById('configClassName').textContent = currentClass;
-  loadStudents();
-  loadPresenceStatus();
-  renderStudents();
-});
+// Vérification de la licence
+function verifyLicense() {
+  const saved = localStorage.getItem('presco-license-key');
+  if (saved && LICENSES[saved] && new Date() <= new Date(LICENSES[saved].expire)) {
+    currentLicense = saved;
+    updateLicenseDisplay();
+    return true;
+  }
+  return false;
+}
 
-// Changer de classe
-function changeClass() {
-  currentClass = document.getElementById('classSelect').value;
-  localStorage.setItem('presco-current-class', currentClass);
-  document.getElementById('classDisplay').textContent = currentClass;
-  document.getElementById('configClassName').textContent = currentClass;
-  
-  loadStudents();
-  loadPresenceStatus();
-  renderStudents();
-  hideStats();
-  
-  const panel = document.getElementById('configPanel');
-  if (panel.style.display !== 'none') {
-    showConfig();
+function updateLicenseDisplay() {
+  const license = LICENSES[currentLicense];
+  if (license) {
+    document.getElementById('schoolName').textContent = license.nom;
+    document.getElementById('licenseCode').textContent = currentLicense;
   }
 }
 
-// === CONFIGURATION ÉLÈVES ===
-
-function showConfig() {
-  const panel = document.getElementById('configPanel');
-  const textarea = document.getElementById('studentNames');
-  
-  const storageKey = `students-${currentClass}`;
-  const existing = localStorage.getItem(storageKey);
-  textarea.value = existing || '';
-  
-  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-}
-
-function saveConfig() {
-  const namesText = document.getElementById('studentNames').value;
-  const namesArray = namesText.split('\n').filter(n => n.trim() !== '');
-  
-  if (namesArray.length === 0) {
-    alert('Veuillez entrer au moins un nom !');
-    return;
-  }
-  
-  localStorage.setItem(`students-${currentClass}`, namesText);
-  localStorage.setItem(`students-array-${currentClass}`, JSON.stringify(namesArray));
-  
-  alert(`✅ ${namesArray.length} élèves sauvegardés pour ${currentClass} !`);
-  document.getElementById('configPanel').style.display = 'none';
-  
-  loadStudents();
-  renderStudents();
-}
-
-function resetStudents() {
-  if (confirm('⚠️ Réinitialiser les noms aux valeurs par défaut ?\n\nCela effacera les modifications manuelles.')) {
-    localStorage.removeItem(`students-array-${currentClass}`);
-    localStorage.removeItem(`students-${currentClass}`);
-    loadStudents();
-    renderStudents();
-    alert('✅ Noms réinitialisés !');
-  }
-}
-
-// === CHARGEMENT DES ÉLÈVES ===
-
-let students = [];
-
-function loadStudents() {
-  const storageKey = `students-array-${currentClass}`;
-  const saved = localStorage.getItem(storageKey);
-  
-  if (saved) {
-    students = JSON.parse(saved);
-  } else if (DEFAULT_STUDENTS[currentClass]) {
-    students = DEFAULT_STUDENTS[currentClass];
-    localStorage.setItem(storageKey, JSON.stringify(students));
-    localStorage.setItem(`students-${currentClass}`, students.join('\n'));
-  } else {
-    students = ['Élève 1', 'Élève 2', 'Élève 3', 'Élève 4', 'Élève 5'];
-  }
-}
-
-// === GESTION DES PRÉSENCES ===
-
-let status = {};
-
-function loadPresenceStatus() {
+function checkClassAccess(classe) {
   const today = new Date().toISOString().split('T')[0];
-  const presenceKey = `presco-${currentClass}-${today}`;
-  status = JSON.parse(localStorage.getItem(presenceKey)) || {};
-}
-
-function renderStudents() {
-  const app = document.getElementById('app');
-  app.innerHTML = '';
-  students.forEach(name => {
-    const div = document.createElement('div');
-    div.className = 'student ' + (status[name] || '');
-    div.textContent = name;
-    div.onclick = () => toggle(name, div);
-    app.appendChild(div);
-  });
-}
-
-// === ACTUALISATION AUTOMATIQUE DÉJÀ PRÉSENTE ===
-function toggle(name, div) {
-  if (!status[name] || status[name] === 'present') {
-    status[name] = 'absent';
-    div.className = 'student absent';
-  } else {
-    status[name] = 'present';
-    div.className = 'student present';
+  const key = `access-${currentLicense}-${classe}-${today}`;
+  if (localStorage.getItem(key)) return true;
+  
+  const license = LICENSES[currentLicense];
+  if (!license || !license.accessCodes[classe]) return false;
+  
+  const code = prompt(`🔐 Code d'accès classe ${classe} :`);
+  if (code === license.accessCodes[classe]) {
+    localStorage.setItem(key, 'true');
+    return true;
   }
-  const today = new Date().toISOString().split('T')[0];
-  const presenceKey = `presco-${currentClass}-${today}`;
-  localStorage.setItem(presenceKey, JSON.stringify(status));
-  // La ligne ci-dessus sauvegarde automatiquement
-  // renderStudents() est appelé à chaque toggle via le DOM
+  alert('❌ Code incorrect.');
+  return false;
 }
 
-// === STATISTIQUES ===
+// ===========================================
+// 🧭 NAVIGATION & SECTIONS
+// ===========================================
 
-function showStats() {
-  const panel = document.getElementById('statsPanel');
-  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-  document.getElementById('statsClass').textContent = currentClass;
-  showPeriod('week');
+function showSection(section) {
+  // Masquer toutes les sections
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  
+  // Afficher la section demandée
+  document.getElementById(section).classList.add('active');
+  event.target.classList.add('active');
+  
+  // Charger les données si nécessaire
+  if (section === 'stats') {
+    showPeriod('week');
+  }
 }
 
-function hideStats() {
-  document.getElementById('statsPanel').style.display = 'none';
-}
+// ===========================================
+// 📊 STATISTIQUES
+// ===========================================
 
 function showPeriod(period) {
   const statsContent = document.getElementById('statsContent');
   const now = new Date();
-  let periodKey, periodName;
+  let periodName;
   
   switch(period) {
-    case 'week':
-      periodKey = getWeekKey(now);
-      periodName = 'Cette semaine';
-      break;
-    case 'month':
-      periodKey = getMonthKey(now);
-      periodName = 'Ce mois';
-      break;
-    case 'quarter':
-      periodKey = getQuarterKey(now);
-      periodName = 'Ce trimestre';
-      break;
+    case 'week': periodName = 'Cette semaine'; break;
+    case 'month': periodName = 'Ce mois'; break;
+    case 'quarter': periodName = 'Ce trimestre'; break;
   }
   
-  // Compter les absences ET présences par élève
-  const absences = {};
-  const presences = {};
-  students.forEach(name => {
-    absences[name] = 0;
-    presences[name] = 0;
-  });
-  
-  // Parcourir toutes les dates de la période
+  // Calculer les stats
   const startDate = period === 'week' ? getStartOfWeek(now) :
                    period === 'month' ? new Date(now.getFullYear(), now.getMonth(), 1) :
                    getStartOfQuarter(now);
@@ -280,74 +131,159 @@ function showPeriod(period) {
                   period === 'month' ? new Date(now.getFullYear(), now.getMonth() + 1, 0) :
                   getEndOfQuarter(now);
   
+  const absences = {};
+  const presences = {};
+  students.forEach(name => {
+    absences[name] = 0;
+    presences[name] = 0;
+  });
+  
   for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
     const dateKey = d.toISOString().split('T')[0];
     const presenceKey = `presco-${currentClass}-${dateKey}`;
     const dayStatus = JSON.parse(localStorage.getItem(presenceKey)) || {};
     
     students.forEach(name => {
-      if (dayStatus[name] === 'absent') {
-        absences[name]++;
-      } else if (dayStatus[name] === 'present') {
-        presences[name]++;
-      }
+      if (dayStatus[name] === 'absent') absences[name]++;
+      else if (dayStatus[name] === 'present') presences[name]++;
     });
   }
   
-  // Calculer totaux
   const totalAbsences = Object.values(absences).reduce((a, b) => a + b, 0);
   const totalPresences = Object.values(presences).reduce((a, b) => a + b, 0);
   const joursTravailles = getWorkingDays(startDate, endDate);
   
-  // Afficher les résultats
   let html = `
-    <h4>📊 Statistiques ${periodName}</h4>
-    <div style="background:#e8f4f8; padding:10px; border-radius:5px; margin:10px 0;">
-      <p><strong>📉 Absences totales :</strong> ${totalAbsences}</p>
-      <p><strong>✅ Présences totales :</strong> ${totalPresences}</p>
-      <p><strong>📅 Jours travaillés :</strong> ${joursTravailles} jours</p>
+    <div class="stats-summary">
+      <div class="stat-card">
+        <div class="stat-number">${totalAbsences}</div>
+        <div class="stat-label">Absences</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">${totalPresences}</div>
+        <div class="stat-label">Présences</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">${joursTravailles}</div>
+        <div class="stat-label">Jours travaillés</div>
+      </div>
     </div>
-    <h5>📋 Détails par élève :</h5>
-    <table style="width:100%; border-collapse:collapse; margin-top:10px; font-size:12px;">
+    
+    <h3>Détails par élève</h3>
+    <table>
       <thead>
-        <tr style="background:#0066FF; color:white;">
-          <th style="padding:8px; text-align:left;">Élève</th>
-          <th style="padding:8px; text-align:center; width:80px;">Absences</th>
-          <th style="padding:8px; text-center; width:80px;">Présences</th>
+        <tr>
+          <th>Élève</th>
+          <th>Absences</th>
+          <th>Présences</th>
         </tr>
       </thead>
       <tbody>
   `;
   
-  // Trier par nombre d'absences (desc)
-  const sortedStudents = Object.entries(absences).sort((a, b) => b[1] - a[1]);
-  
-  sortedStudents.forEach(([name, absCount]) => {
+  const sorted = Object.entries(absences).sort((a, b) => b[1] - a[1]);
+  sorted.forEach(([name, absCount]) => {
     const presCount = presences[name];
-    const color = absCount >= 3 ? '#ff6b6b' : absCount >= 1 ? '#ffa726' : '#66bb6a';
+    const color = absCount >= 3 ? 'high' : absCount >= 1 ? 'medium' : 'low';
     html += `
-      <tr style="background:${color}20; border-bottom:1px solid #ddd;">
-        <td style="padding:8px;">${name}</td>
-        <td style="padding:8px; text-align:center; font-weight:bold; color:#d32f2f;">${absCount}</td>
-        <td style="padding:8px; text-align:center; font-weight:bold; color:#388e3c;">${presCount}</td>
+      <tr class="risk-${color}">
+        <td>${name}</td>
+        <td style="color:var(--danger); font-weight:bold;">${absCount}</td>
+        <td style="color:var(--success); font-weight:bold;">${presCount}</td>
       </tr>
     `;
   });
   
   html += '</tbody></table>';
-  html += `<p style="margin-top:15px;"><small>💡 Mise à jour : ${new Date().toLocaleString('fr-FR')}</small></p>`;
-  
   statsContent.innerHTML = html;
 }
+
+// ===========================================
+// 📤 EXPORTS
+// ===========================================
+
+function exportCSV() {
+  const today = new Date().toISOString().split('T')[0];
+  const license = LICENSES[currentLicense];
+  let csv = `ÉCOLE;${license.nom}\nCLASSE;${currentClass}\nDATE;${today}\n\nNOM;STATUT\n`;
+  
+  students.forEach(name => {
+    const etat = status[name] === 'present' ? 'Présent' : 
+                 status[name] === 'absent' ? 'Absent' : 'Non renseigné';
+    csv += `${name};${etat}\n`;
+  });
+  
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `presco-${currentClass}-${today}.csv`;
+  a.click();
+}
+
+function exportStats() {
+  const now = new Date();
+  const license = LICENSES[currentLicense];
+  let csv = `STATISTIQUES - ${license.nom} - Classe ${currentClass}\nExporté le : ${now.toLocaleString('fr-FR')}\n\n`;
+  
+  ['week', 'month', 'quarter'].forEach(period => {
+    const periodName = period === 'week' ? 'Semaine' : 
+                       period === 'month' ? 'Mois' : 'Trimestre';
+    csv += `=== ${periodName} ===\nÉlève;Absences;Présences\n`;
+    
+    // Récupération des données
+    const startDate = period === 'week' ? getStartOfWeek(now) :
+                     period === 'month' ? new Date(now.getFullYear(), now.getMonth(), 1) :
+                     getStartOfQuarter(now);
+    
+    const endDate = period === 'week' ? getEndOfWeek(now) :
+                    period === 'month' ? new Date(now.getFullYear(), now.getMonth() + 1, 0) :
+                    getEndOfQuarter(now);
+    
+    const absences = {};
+    const presences = {};
+    students.forEach(name => {
+      absences[name] = 0;
+      presences[name] = 0;
+    });
+    
+    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+      const dateKey = d.toISOString().split('T')[0];
+      const presenceKey = `presco-${currentClass}-${dateKey}`;
+      const dayStatus = JSON.parse(localStorage.getItem(presenceKey)) || {};
+      
+      students.forEach(name => {
+        if (dayStatus[name] === 'absent') absences[name]++;
+        else if (dayStatus[name] === 'present') presences[name]++;
+      });
+    }
+    
+    const sorted = Object.entries(absences).sort((a, b) => b[1] - a[1]);
+    sorted.forEach(([name, absCount]) => {
+      csv += `${name};${absCount};${presences[name]}\n`;
+    });
+    
+    csv += '\n';
+  });
+  
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `stats-${currentClass}-${now.toISOString().split('T')[0]}.csv`;
+  a.click();
+}
+
+// ===========================================
+// 🧮 UTILITAIRES DATES
+// ===========================================
 
 function getWorkingDays(startDate, endDate) {
   let count = 0;
   const current = new Date(startDate);
   while (current <= endDate) {
     const dayOfWeek = current.getDay();
-    if (dayOfWeek !== 0 && dayOfWeek !== 6) {
-      count++;
-    }
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) count++;
     current.setDate(current.getDate() + 1);
   }
   return count;
@@ -380,97 +316,37 @@ function getEndOfQuarter(date) {
   return end;
 }
 
-// === EXPORT STATISTIQUES ===
+// ===========================================
+// 🔐 INITIALISATION
+// ===========================================
 
-function exportStats() {
-  const now = new Date();
-  let csv = `STATISTIQUES D'ABSENCES - ${currentClass}\n`;
-  csv += `Exporté le : ${now.toLocaleString('fr-FR')}\n\n`;
-  
-  // Export semaine
-  csv += `📅 SEMAINE ${getWeekKey(now)}\n`;
-  csv += exportPeriodStats('week');
-  csv += `\n`;
-  
-  // Export mois
-  csv += `📅 MOIS ${getMonthKey(now)}\n`;
-  csv += exportPeriodStats('month');
-  csv += `\n`;
-  
-  // Export trimestre
-  csv += `📅 TRIMESTRE ${getQuarterKey(now)}\n`;
-  csv += exportPeriodStats('quarter');
-  
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `stats-${currentClass}-${now.toISOString().split('T')[0]}.csv`;
-  a.click();
-}
-
-function exportPeriodStats(period) {
-  const now = new Date();
-  const startDate = period === 'week' ? getStartOfWeek(now) :
-                   period === 'month' ? new Date(now.getFullYear(), now.getMonth(), 1) :
-                   getStartOfQuarter(now);
-  
-  const endDate = period === 'week' ? getEndOfWeek(now) :
-                  period === 'month' ? new Date(now.getFullYear(), now.getMonth() + 1, 0) :
-                  getEndOfQuarter(now);
-  
-  const absences = {};
-  const presences = {};
-  students.forEach(name => {
-    absences[name] = 0;
-    presences[name] = 0;
-  });
-  
-  for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-    const dateKey = d.toISOString().split('T')[0];
-    const presenceKey = `presco-${currentClass}-${dateKey}`;
-    const dayStatus = JSON.parse(localStorage.getItem(presenceKey)) || {};
-    
-    students.forEach(name => {
-      if (dayStatus[name] === 'absent') absences[name]++;
-      else if (dayStatus[name] === 'present') presences[name]++;
-    });
+document.addEventListener('DOMContentLoaded', () => {
+  if (!verifyLicense()) {
+    // Rediriger vers une page de licence invalide ou redemander
+    const code = prompt('🏫 Code licence école :');
+    if (LICENSES[code] && new Date() <= new Date(LICENSES[code].expire)) {
+      localStorage.setItem('presco-license-key', code);
+      currentLicense = code;
+      updateLicenseDisplay();
+    } else {
+      alert('❌ Licence invalide ou expirée.');
+      return;
+    }
   }
   
-  const totalAbsences = Object.values(absences).reduce((a, b) => a + b, 0);
-  const totalPresences = Object.values(presences).reduce((a, b) => a + b, 0);
-  
-  let csv = `Élève,Absences,Présences\n`;
-  const sortedStudents = Object.entries(absences).sort((a, b) => b[1] - a[1]);
-  
-  sortedStudents.forEach(([name, absCount]) => {
-    csv += `${name},${absCount},${presences[name]}\n`;
-  });
-  
-  csv += `\nTOTAL,${totalAbsences},${totalPresences}\n`;
-  return csv;
-}
+  // Initialiser l'interface
+  updateLicenseDisplay();
+  loadStudents();
+  loadPresenceStatus();
+  renderStudents();
+  showSection('presences');
+});
 
-// === EXPORT DU JOUR ===
+// ===========================================
+// 🎨 CSS SUPPLÉMENTAIRE POUR LES STATS
+// ===========================================
 
-function exportCSV() {
-  const today = new Date().toISOString().split('T')[0];
-  let csv = `Classe,${currentClass}\nDate,${today}\n\nNom,Statut\n`;
-  students.forEach(name => {
-    const etat = status[name] === 'present' ? 'Présent' : 
-                 status[name] === 'absent' ? 'Absent' : 'Non renseigné';
-    csv += `${name},${etat}\n`;
-  });
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `presco-${currentClass}-${today}.csv`;
-  a.click();
-}
+// Ajoutez à style.css :
+/*
 
-// === SERVICE WORKER ===
-
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js');
-}
+*/
