@@ -3,6 +3,7 @@
 // ===========================================
 
 const LICENSES = {
+  // Exemple : École Primaire Les Cygnes
   'ECOLE-CYGNE-2024': {
     nom: 'École Primaire Les Cygnes',
     classes: ['CE1A', 'CE1B', 'CM1', 'CM2'],
@@ -12,6 +13,18 @@ const LICENSES = {
       'CE1B': '1234',
       'CM1': '5678',
       'CM2': '9012'
+    }
+  },
+  
+  // Ajoutez d'autres écoles ici
+  'ECOLE-LUMIERE-2024': {
+    nom: 'École Primaire Lumière',
+    classes: ['CE1A', 'CE1B', 'CE1C'],
+    expire: '2025-06-30',
+    accessCodes: {
+      'CE1A': '1111',
+      'CE1B': '2222',
+      'CE1C': '3333'
     }
   }
 };
@@ -45,8 +58,6 @@ function verifyLicense() {
   if (saved && LICENSES[saved] && new Date() <= new Date(LICENSES[saved].expire)) {
     currentLicense = saved;
     updateLicenseDisplay();
-    populateClassSelector(); // ➜ CRUCIAL : remplit le menu déroulant
-    showMainInterface();     // ➜ CRUCIAL : affiche l'interface principale
     return true;
   }
   return false;
@@ -60,82 +71,47 @@ function updateLicenseDisplay() {
   }
 }
 
-// ➜ NOUVELLE FONCTION : remplit le menu déroulant des classes
-function populateClassSelector() {
+function checkClassAccess(classe) {
+  const today = new Date().toISOString().split('T')[0];
+  const key = `access-${currentLicense}-${classe}-${today}`;
+  if (localStorage.getItem(key)) return true;
+  
   const license = LICENSES[currentLicense];
-  if (!license) return;
+  if (!license || !license.accessCodes[classe]) return false;
   
-  const select = document.getElementById('classSelect');
-  select.innerHTML = ''; // Vider
-  
-  license.classes.forEach(classe => {
-    const option = document.createElement('option');
-    option.value = classe;
-    option.textContent = classe;
-    select.appendChild(option);
-  });
-  
-  // Sélectionner la classe actuelle si elle existe
-  if (license.classes.includes(currentClass)) {
-    select.value = currentClass;
-  } else {
-    currentClass = license.classes[0] || 'CE1A';
-    select.value = currentClass;
+  const code = prompt(`🔐 Code d'accès classe ${classe} :`);
+  if (code === license.accessCodes[classe]) {
+    localStorage.setItem(key, 'true');
+    return true;
   }
-}
-
-// ➜ NOUVELLE FONCTION : affiche l'interface principale
-function showMainInterface() {
-  document.getElementById('classSelector').style.display = 'block';
-  document.getElementById('mainNav').style.display = 'flex';
-  showSection('presences');
-}
-
-// ➜ NOUVELLE FONCTION : gestion du changement de classe
-function changeClass() {
-  if (!isLicenseValid()) {
-    if (!verifyLicense()) return;
-  }
-  
-  currentClass = document.getElementById('classSelect').value;
-  
-  // Vérifier que la classe est autorisée
-  const license = LICENSES[currentLicense];
-  if (!license || !license.classes.includes(currentClass)) {
-    alert(`❌ La classe ${currentClass} n'est pas incluse dans votre licence.\n\nClasses disponibles : ${license.classes.join(', ')}`);
-    return;
-  }
-  
-  // Vérifier le code d'accès
-  if (!checkClassAccess(currentClass)) return;
-  
-  // Sauvegarder et recharger
-  localStorage.setItem('presco-current-class', currentClass);
-  document.getElementById('classDisplay').textContent = currentClass;
-  loadStudents();
-  loadPresenceStatus();
-  renderStudents();
-  updateTotals();
+  alert('❌ Code incorrect.');
+  return false;
 }
 
 // ===========================================
-// 📊 STATISTIQUES & EXPORTS
+// 🧭 NAVIGATION & SECTIONS
 // ===========================================
 
 function showSection(section) {
+  // Masquer toutes les sections
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   
+  // Afficher la section demandée
   document.getElementById(section).classList.add('active');
   event.target.classList.add('active');
   
+  // Charger les données si nécessaire
   if (section === 'stats') {
     showPeriod('week');
   }
 }
 
+// ===========================================
+// 📊 STATISTIQUES
+// ===========================================
+
 function showPeriod(period) {
-  // Code identique à la version précédente
   const statsContent = document.getElementById('statsContent');
   const now = new Date();
   let periodName;
@@ -146,7 +122,7 @@ function showPeriod(period) {
     case 'quarter': periodName = 'Ce trimestre'; break;
   }
   
-  // Calcul des stats (code identique)
+  // Calculer les stats
   const startDate = period === 'week' ? getStartOfWeek(now) :
                    period === 'month' ? new Date(now.getFullYear(), now.getMonth(), 1) :
                    getStartOfQuarter(now);
@@ -222,6 +198,10 @@ function showPeriod(period) {
   statsContent.innerHTML = html;
 }
 
+// ===========================================
+// 📤 EXPORTS
+// ===========================================
+
 function exportCSV() {
   const today = new Date().toISOString().split('T')[0];
   const license = LICENSES[currentLicense];
@@ -295,86 +275,6 @@ function exportStats() {
 }
 
 // ===========================================
-// 📋 GESTION DES PRÉSENCES
-// ===========================================
-
-let students = [];
-let status = {};
-
-function loadStudents() {
-  console.log('🔍 DEBUG - Chargement élèves pour classe:', currentClass);
-  
-  const storageKey = `students-array-${currentClass}`;
-  const saved = localStorage.getItem(storageKey);
-  
-  if (saved) {
-    students = JSON.parse(saved);
-    console.log('✅ Élèves chargés depuis localStorage:', students);
-  } else {
-    students = DEFAULT_STUDENTS[currentClass] || [
-      'Élève 1', 'Élève 2', 'Élève 3', 'Élève 4', 'Élève 5'
-    ];
-    console.log('✅ Élèves chargés depuis DEFAULT_STUDENTS:', students);
-    
-    localStorage.setItem(storageKey, JSON.stringify(students));
-  }
-}
-
-function loadPresenceStatus() {
-  const today = new Date().toISOString().split('T')[0];
-  const presenceKey = `presco-${currentClass}-${today}`;
-  status = JSON.parse(localStorage.getItem(presenceKey)) || {};
-}
-
-function renderStudents() {
-  const app = document.getElementById('studentsList');
-  app.innerHTML = '';
-  
-  const sortedStudents = [...students].sort((a, b) => a.localeCompare(b));
-  
-  sortedStudents.forEach(name => {
-    const div = document.createElement('div');
-    div.className = 'student ' + (status[name] || '');
-    div.textContent = name;
-    div.onclick = () => toggle(name, div);
-    app.appendChild(div);
-  });
-  
-  updateTotals();
-}
-
-function updateTotals() {
-  const totalStudents = students.length;
-  let totalPresent = 0;
-  let totalAbsent = 0;
-  
-  students.forEach(name => {
-    if (status[name] === 'present') totalPresent++;
-    else if (status[name] === 'absent') totalAbsent++;
-  });
-  
-  document.getElementById('totalStudents').textContent = totalStudents;
-  document.getElementById('totalPresent').textContent = totalPresent;
-  document.getElementById('totalAbsent').textContent = totalAbsent;
-}
-
-function toggle(name, div) {
-  if (!status[name] || status[name] === 'present') {
-    status[name] = 'absent';
-    div.className = 'student absent';
-  } else {
-    status[name] = 'present';
-    div.className = 'student present';
-  }
-  
-  const today = new Date().toISOString().split('T')[0];
-  const presenceKey = `presco-${currentClass}-${today}`;
-  localStorage.setItem(presenceKey, JSON.stringify(status));
-  
-  updateTotals();
-}
-
-// ===========================================
 // 🧮 UTILITAIRES DATES
 // ===========================================
 
@@ -417,33 +317,36 @@ function getEndOfQuarter(date) {
 }
 
 // ===========================================
-// 🚀 INITIALISATION
+// 🔐 INITIALISATION
 // ===========================================
 
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('🚀 Initialisation Presco V1.5');
-  
   if (!verifyLicense()) {
-    // Demander la licence si pas valide
+    // Rediriger vers une page de licence invalide ou redemander
     const code = prompt('🏫 Code licence école :');
     if (LICENSES[code] && new Date() <= new Date(LICENSES[code].expire)) {
       localStorage.setItem('presco-license-key', code);
       currentLicense = code;
       updateLicenseDisplay();
-      populateClassSelector();
-      showMainInterface();
     } else {
       alert('❌ Licence invalide ou expirée.');
       return;
     }
   }
   
-  // Initialisation complète
+  // Initialiser l'interface
   updateLicenseDisplay();
-  populateClassSelector();
-  showMainInterface();
   loadStudents();
   loadPresenceStatus();
   renderStudents();
   showSection('presences');
 });
+
+// ===========================================
+// 🎨 CSS SUPPLÉMENTAIRE POUR LES STATS
+// ===========================================
+
+// Ajoutez à style.css :
+/*
+
+*/
