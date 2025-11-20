@@ -20,8 +20,16 @@
     <p>Code : <span id="licenseCode">----</span></p>
   </div>
 
+  <!-- SÉLECTEUR DE CLASSE (AJOUTÉ) -->
+  <div class="class-selector" id="classSelector" style="display:none;">
+    <label for="classSelect">Classe :</label>
+    <select id="classSelect" onchange="changeClass()">
+      <!-- Options générées dynamiquement -->
+    </select>
+  </div>
+
   <!-- MENU DE NAVIGATION -->
-  <nav class="main-nav">
+  <nav class="main-nav" id="mainNav" style="display:none;">
     <button class="nav-btn active" onclick="showSection('presences')">
       📋 Présences
     </button>
