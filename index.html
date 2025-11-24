@@ -12,6 +12,11 @@
   <header class="header">
     <h1>🎓 Presco</h1>
     <p class="subtitle">Gestion des présences scolaires</p>
+    
+    <!-- ✅ BOUTON CHANGER DE CLASSE (NOUVEAU) -->
+    <button id="changeClassBtn" class="change-class-btn" style="display:none;" onclick="changeClass()">
+      🔄 Changer de classe
+    </button>
   </header>
 
   <!-- LICENCE & ACCÈS -->
@@ -20,18 +25,18 @@
     <p>Code : <span id="licenseCode">----</span></p>
   </div>
 
-  <!-- SÉLECTION DE LA CLASSE (NOUVEAU BLOC) -->
+  <!-- SÉLECTION DE LA CLASSE -->
   <div id="classSelection" class="class-selection" style="display:none;">
     <h2>📚 Sélectionnez votre classe</h2>
     <div id="classButtons" class="class-buttons"></div>
   </div>
 
-  <!-- MESSAGE D'ERREUR ACCÈS CLASSE (NOUVEAU BLOC) -->
+  <!-- MESSAGE D'ERREUR ACCÈS CLASSE -->
   <div id="classAccessMessage" class="class-access-message" style="display:none;">
     <p id="accessMessageText"></p>
   </div>
 
-  <!-- MENU DE NAVIGATION (masqué jusqu'à sélection de classe) -->
+  <!-- MENU DE NAVIGATION -->
   <nav id="mainNav" class="main-nav" style="display:none;">
     <button class="nav-btn active" onclick="showSection('presences', event)">
       📋 Présences
@@ -46,7 +51,6 @@
 
   <!-- SECTION PRÉSENCES -->
   <section id="presences" class="section active">
-    <!-- BANDEAU TOTAUX -->
     <div class="totals-bar">
       <div class="total-box">
         <div class="number" id="totalStudents">0</div>

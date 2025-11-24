@@ -590,3 +590,95 @@ document.addEventListener('DOMContentLoaded', async () => {
     alert('Une erreur est survenue. Rechargez la page.');
   });
 });
+
+// ===========================================
+// 🔄 CHANGER DE CLASSE (NOUVELLE FONCTION)
+// ===========================================
+
+function changeClass() {
+  // Demander confirmation
+  const confirmChange = confirm('🔄 Voulez-vous vraiment changer de classe ?\n\nLes données de la classe actuelle seront sauvegardées.');
+  
+  if (!confirmChange) return;
+  
+  // Sauvegarder l'état actuel
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const presenceKey = `presco-${currentClass}-${today}`;
+    localStorage.setItem(`${presenceKey}-backup`, JSON.stringify({
+      timestamp: new Date().toISOString(),
+      class: currentClass,
+      data: status
+    }));
+  } catch (e) {
+    console.warn('Erreur sauvegarde backup:', e);
+  }
+  
+  // Réinitialiser l'interface
+  currentClass = null;
+  students = [];
+  status = {};
+  
+  // Cacher les sections
+  document.getElementById('mainNav').style.display = 'none';
+  document.getElementById('changeClassBtn').style.display = 'none';
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  
+  // Réafficher le sélecteur de classe
+  document.getElementById('classSelection').style.display = 'block';
+  document.getElementById('classAccessMessage').style.display = 'none';
+  
+  // Mettre à jour l'affichage
+  document.getElementById('studentsList').innerHTML = '';
+  document.getElementById('totalStudents').textContent = '0';
+  document.getElementById('totalPresent').textContent = '0';
+  document.getElementById('totalAbsent').textContent = '0';
+  
+  // Afficher les classes disponibles
+  displayClassSelection();
+  
+  console.log('✅ Retour au sélecteur de classe');
+}
+
+// ===========================================
+// 🔐 INITIALISATION MODIFIÉE
+// ===========================================
+
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!await verifyLicense()) {
+    const code = prompt('🏫 Code licence école :');
+    if (LICENSES[code] && new Date() <= new Date(LICENSES[code].expire)) {
+      localStorage.setItem('presco-license-key', code);
+      currentLicense = code;
+      updateLicenseDisplay();
+    } else {
+      alert('❌ Licence invalide ou expirée.');
+      document.body.innerHTML = '<h1 style="text-align:center; margin-top:50px;">Accès refusé</h1>';
+      return;
+    }
+  }
+  
+  displayClassSelection();
+  updateLicenseDisplay();
+  
+  // ✅ S'assurer que students est chargé même si on recharge la page
+  if (currentClass && currentLicense) {
+    const license = LICENSES[currentLicense];
+    if (license && license.classes.includes(currentClass)) {
+      const today = new Date().toISOString().split('T')[0];
+      const accessKey = `access-${currentLicense}-${currentClass}-${today}`;
+      
+      // ✅ VÉRIFICATION CLÉ : Si accès valide aujourd'hui, restaurer
+      if (localStorage.getItem(accessKey)) {
+        document.getElementById('classSelection').style.display = 'none';
+        document.getElementById('mainNav').style.display = 'flex';
+        document.getElementById('changeClassBtn').style.display = 'block';
+        
+        loadStudents();
+        loadPresenceStatus();
+        renderStudents();
+        showSection('presences');
+      }
+    }
+  }
+});
