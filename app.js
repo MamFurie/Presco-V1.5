@@ -49,8 +49,8 @@ const DEFAULT_STUDENTS = {
 
 let currentLicense = null;
 let currentClass = localStorage.getItem('presco-current-class') || 'CE1A';
-let students = []; // ✅ CORRIGÉ : variable manquante
-let status = {};   // ✅ CORRIGÉ : variable manquante
+let students = [];
+let status = {};
 
 // Vérification de la licence
 async function verifyLicense() {
@@ -71,7 +71,7 @@ function updateLicenseDisplay() {
   }
 }
 
-// ✅ NOUVELLE FONCTION : Afficher les classes disponibles
+// Afficher les classes disponibles
 function displayClassSelection() {
   const license = LICENSES[currentLicense];
   if (!license) return;
@@ -90,12 +90,11 @@ function displayClassSelection() {
   document.getElementById('classSelection').style.display = 'block';
 }
 
-// ✅ NOUVELLE FONCTION : Gérer la sélection de classe
+// Gérer la sélection de classe
 async function selectClass(classe) {
   const license = LICENSES[currentLicense];
   if (!license) return;
   
-  // Vérifier si la classe est dans la licence
   if (!license.classes.includes(classe)) {
     alert('❌ Classe non disponible pour cette licence.');
     return;
@@ -119,12 +118,15 @@ async function selectClass(classe) {
     localStorage.setItem(accessKey, 'true');
   }
   
-  // ✅ Accès autorisé
+  // Accès autorisé
   currentClass = classe;
   localStorage.setItem('presco-current-class', currentClass);
   
   // Masquer la sélection et charger les données
   document.getElementById('classSelection').style.display = 'none';
+  document.getElementById('mainNav').style.display = 'flex';
+  
+  // ✅ CHARGEMENT GARANTI avant affichage
   loadStudents();
   loadPresenceStatus();
   renderStudents();
@@ -147,12 +149,16 @@ function showSection(section, event) {
   if (event && event.target) {
     event.target.classList.add('active');
   } else {
-    // Fallback si pas d'événement
+    // Fallback
     document.querySelector(`[onclick*="${section}"]`)?.classList.add('active');
   }
   
-  // Charger les données si nécessaire
+  // ✅ CHARGER LES DONNÉES SI NÉCESSAIRE
   if (section === 'stats') {
+    // S'assurer que students est chargé
+    if (students.length === 0) {
+      loadStudents();
+    }
     showPeriod('week');
   }
 }
@@ -216,10 +222,7 @@ function setStatus(name, newStatus) {
   
   status[name] = newStatus;
   localStorage.setItem(presenceKey, JSON.stringify(status));
-  
-  // ✅ Ajout du logging
   logChange(name, status[name], newStatus);
-  
   renderStudents();
 }
 
@@ -235,79 +238,111 @@ function updateTotals() {
 }
 
 // ===========================================
-// 📊 STATISTIQUES
+// 📊 STATISTIQUES - CORRIGÉ & OPTIMISÉ
 // ===========================================
 
 function showPeriod(period) {
   const statsContent = document.getElementById('statsContent');
   const now = new Date();
-  let periodName;
   
-  switch(period) {
-    case 'week': periodName = 'Cette semaine'; break;
-    case 'month': periodName = 'Ce mois'; break;
-    case 'quarter': periodName = 'Ce trimestre'; break;
-    default: return;
+  // ✅ VALIDATION
+  if (!period || !['week', 'month', 'quarter'].includes(period)) {
+    console.error('Période invalide:', period);
+    return;
   }
   
-  // ✅ Ajout d'un indicateur de chargement
-  statsContent.innerHTML = '<div class="loading">Chargement des statistiques...</div>';
+  const periodName = {
+    'week': 'Cette semaine',
+    'month': 'Ce mois',
+    'quarter': 'Ce trimestre'
+  }[period];
   
+  // ✅ S'ASSURER QUE STUDENTS EST CHARGÉ
+  if (students.length === 0) {
+    loadStudents();
+  }
+  
+  // ✅ Indicateur de chargement
+  statsContent.innerHTML = `
+    <div style="text-align:center; padding:40px;">
+      <div class="spinner"></div>
+      <p>Chargement des statistiques...</p>
+    </div>
+  `;
+  
+  // Calcul asynchrone pour éviter blocage UI
   setTimeout(() => {
-    const { startDate, endDate } = getPeriodDates(period);
-    const { absences, presences } = calculateStats(startDate, endDate);
-    
-    const totalAbsences = Object.values(absences).reduce((a, b) => a + b, 0);
-    const totalPresences = Object.values(presences).reduce((a, b) => a + b, 0);
-    const joursTravailles = getWorkingDays(startDate, endDate);
-    
-    let html = `
-      <div class="stats-summary">
-        <div class="stat-card">
-          <div class="stat-number">${totalAbsences}</div>
-          <div class="stat-label">Absences</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number">${totalPresences}</div>
-          <div class="stat-label">Présences</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number">${joursTravailles}</div>
-          <div class="stat-label">Jours travaillés</div>
-        </div>
-      </div>
+    try {
+      const { startDate, endDate } = getPeriodDates(period);
+      const { absences, presences } = calculateStats(startDate, endDate);
       
-      <h3>Détails par élève</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Élève</th>
-            <th>Absences</th>
-            <th>Présences</th>
-          </tr>
-        </thead>
-        <tbody>
-    `;
-    
-    const sorted = Object.entries(absences).sort((a, b) => b[1] - a[1]);
-    sorted.forEach(([name, absCount]) => {
-      const presCount = presences[name];
-      const color = absCount >= 3 ? 'high' : absCount >= 1 ? 'medium' : 'low';
-      html += `
-        <tr class="risk-${color}">
-          <td>${name}</td>
-          <td style="color:var(--danger); font-weight:bold;">${absCount}</td>
-          <td style="color:var(--success); font-weight:bold;">${presCount}</td>
-        </tr>
+      const totalAbsences = Object.values(absences).reduce((a, b) => a + b, 0);
+      const totalPresences = Object.values(presences).reduce((a, b) => a + b, 0);
+      const joursTravailles = getWorkingDays(startDate, endDate);
+      
+      let html = `
+        <div class="stats-summary">
+          <div class="stat-card">
+            <div class="stat-number">${totalAbsences}</div>
+            <div class="stat-label">Absences</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">${totalPresences}</div>
+            <div class="stat-label">Présences</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">${joursTravailles}</div>
+            <div class="stat-label">Jours travaillés</div>
+          </div>
+        </div>
+        
+        <h3>Détails par élève</h3>
+        <table class="stats-table">
+          <thead>
+            <tr>
+              <th>Élève</th>
+              <th>Absences</th>
+              <th>Présences</th>
+              <th>Taux</th>
+            </tr>
+          </thead>
+          <tbody>
       `;
-    });
-    
-    html += '</tbody></table>';
-    statsContent.innerHTML = html;
-  }, 100);
+      
+      const sorted = Object.entries(absences).sort((a, b) => b[1] - a[1]);
+      sorted.forEach(([name, absCount]) => {
+        const presCount = presences[name];
+        const total = absCount + presCount;
+        const rate = total > 0 ? Math.round((presCount / total) * 100) : 0;
+        
+        const color = absCount >= 3 ? 'high' : absCount >= 1 ? 'medium' : 'low';
+        html += `
+          <tr class="risk-${color}">
+            <td>${name}</td>
+            <td style="color:var(--danger); font-weight:bold;">${absCount}</td>
+            <td style="color:var(--success); font-weight:bold;">${presCount}</td>
+            <td>${rate}%</td>
+          </tr>
+        `;
+      });
+      
+      html += '</tbody></table>';
+      statsContent.innerHTML = html;
+    } catch (error) {
+      console.error('Erreur calcul stats:', error);
+      statsContent.innerHTML = `
+        <div style="color:var(--danger); padding:20px; text-align:center;">
+          ❌ Erreur lors du calcul des statistiques
+        </div>
+      `;
+    }
+  }, 50);
 }
 
-// ✅ OPTIMISÉ : Fonction unique pour les dates
+// ===========================================
+// 📅 UTILITAIRES DE DATES - CORRIGÉS
+// ===========================================
+
 function getPeriodDates(period) {
   const now = new Date();
   let startDate, endDate;
@@ -325,23 +360,25 @@ function getPeriodDates(period) {
       startDate = getStartOfQuarter(now);
       endDate = getEndOfQuarter(now);
       break;
+    default:
+      throw new Error(`Période inconnue: ${period}`);
   }
   
   return { startDate, endDate };
 }
 
-// ✅ OPTIMISÉ : Fonction unique pour le calcul
 function calculateStats(startDate, endDate) {
   const absences = {};
   const presences = {};
   
+  // ✅ Initialiser pour TOUS les élèves
   students.forEach(name => {
     absences[name] = 0;
     presences[name] = 0;
   });
   
-  // ✅ SÉCURISÉ : Boucle avec limite
-  const maxDays = 365;
+  // ✅ Boucle sécurisée
+  const maxDays = 366;
   let days = 0;
   const current = new Date(startDate);
   
@@ -362,85 +399,11 @@ function calculateStats(startDate, endDate) {
   return { absences, presences };
 }
 
-// ===========================================
-// 📤 EXPORTS
-// ===========================================
-
-function exportCSV() {
-  const today = new Date().toISOString().split('T')[0];
-  const license = LICENSES[currentLicense];
-  
-  if (!license) {
-    alert('❌ Licence non valide.');
-    return;
-  }
-  
-  let csv = `ÉCOLE;${license.nom}\nCLASSE;${currentClass}\nDATE;${today}\n\nNOM;STATUT\n`;
-  
-  students.forEach(name => {
-    const etat = status[name] === 'present' ? 'Présent' : 
-                 status[name] === 'absent' ? 'Absent' : 'Non renseigné';
-    csv += `${name};${etat}\n`;
-  });
-  
-  downloadFile(csv, `presco-${currentClass}-${today}.csv`, 'text/csv');
-}
-
-function exportStats() {
-  const now = new Date();
-  const license = LICENSES[currentLicense];
-  
-  if (!license) {
-    alert('❌ Licence non valide.');
-    return;
-  }
-  
-  let csv = `STATISTIQUES - ${license.nom} - Classe ${currentClass}\nExporté le : ${now.toLocaleString('fr-FR')}\n\n`;
-  
-  ['week', 'month', 'quarter'].forEach(period => {
-    const periodName = period === 'week' ? 'Semaine' : 
-                       period === 'month' ? 'Mois' : 'Trimestre';
-    csv += `=== ${periodName} ===\nÉlève;Absences;Présences\n`;
-    
-    const { startDate, endDate } = getPeriodDates(period);
-    const { absences, presences } = calculateStats(startDate, endDate);
-    
-    const sorted = Object.entries(absences).sort((a, b) => b[1] - a[1]);
-    sorted.forEach(([name, absCount]) => {
-      csv += `${name};${absCount};${presences[name]}\n`;
-    });
-    
-    csv += '\n';
-  });
-  
-  downloadFile(csv, `stats-${currentClass}-${now.toISOString().split('T')[0]}.csv`, 'text/csv');
-}
-
-// ✅ NOUVELLE FONCTION : Téléchargement sécurisé
-function downloadFile(content, filename, mimeType) {
-  const blob = new Blob([content], { type: mimeType + ';charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.style.display = 'none';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-// ===========================================
-// 🧮 UTILITAIRES DATES
-// ===========================================
-
 function getWorkingDays(startDate, endDate) {
   if (!(startDate instanceof Date) || !(endDate instanceof Date) || startDate > endDate) {
-    console.warn('Dates invalides pour getWorkingDays');
     return 0;
   }
   
-  // ✅ Exemple de jours fériés (à compléter)
   const HOLIDAYS = [
     '2025-01-01', '2025-04-21', '2025-05-01', '2025-05-08',
     '2025-05-29', '2025-06-09', '2025-07-14', '2025-08-15',
@@ -489,10 +452,79 @@ function getEndOfQuarter(date) {
 }
 
 // ===========================================
+// 📤 EXPORTS
+// ===========================================
+
+function exportCSV() {
+  const today = new Date().toISOString().split('T')[0];
+  const license = LICENSES[currentLicense];
+  
+  if (!license) {
+    alert('❌ Licence non valide.');
+    return;
+  }
+  
+  let csv = `ÉCOLE;${license.nom}\nCLASSE;${currentClass}\nDATE;${today}\n\nNOM;STATUT\n`;
+  
+  students.forEach(name => {
+    const etat = status[name] === 'present' ? 'Présent' : 
+                 status[name] === 'absent' ? 'Absent' : 'Non renseigné';
+    csv += `${name};${etat}\n`;
+  });
+  
+  downloadFile(csv, `presco-${currentClass}-${today}.csv`, 'text/csv');
+}
+
+function exportStats() {
+  const now = new Date();
+  const license = LICENSES[currentLicense];
+  
+  if (!license) {
+    alert('❌ Licence non valide.');
+    return;
+  }
+  
+  let csv = `STATISTIQUES - ${license.nom} - Classe ${currentClass}\nExporté le : ${now.toLocaleString('fr-FR')}\n\n`;
+  
+  ['week', 'month', 'quarter'].forEach(period => {
+    const periodName = period === 'week' ? 'Semaine' : 
+                       period === 'month' ? 'Mois' : 'Trimestre';
+    csv += `=== ${periodName} ===\nÉlève;Absences;Présences;Taux\n`;
+    
+    const { startDate, endDate } = getPeriodDates(period);
+    const { absences, presences } = calculateStats(startDate, endDate);
+    
+    const sorted = Object.entries(absences).sort((a, b) => b[1] - a[1]);
+    sorted.forEach(([name, absCount]) => {
+      const presCount = presences[name];
+      const total = absCount + presCount;
+      const rate = total > 0 ? Math.round((presCount / total) * 100) : 0;
+      csv += `${name};${absCount};${presCount};${rate}%\n`;
+    });
+    
+    csv += '\n';
+  });
+  
+  downloadFile(csv, `stats-${currentClass}-${now.toISOString().split('T')[0]}.csv`, 'text/csv');
+}
+
+function downloadFile(content, filename, mimeType) {
+  const blob = new Blob([content], { type: mimeType + ';charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ===========================================
 // 📝 LOGGING & AUDIT
 // ===========================================
 
-// ✅ NOUVELLE FONCTION : Suivi des modifications
 function logChange(student, oldStatus, newStatus) {
   const log = {
     timestamp: new Date().toISOString(),
@@ -507,7 +539,6 @@ function logChange(student, oldStatus, newStatus) {
   const logs = JSON.parse(localStorage.getItem('presco-logs') || '[]');
   logs.push(log);
   
-  // Garder seulement les 1000 derniers logs
   if (logs.length > 1000) {
     logs.splice(0, logs.length - 1000);
   }
@@ -520,7 +551,6 @@ function logChange(student, oldStatus, newStatus) {
 // ===========================================
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // ✅ Vérifier la licence
   if (!await verifyLicense()) {
     const code = prompt('🏫 Code licence école :');
     if (LICENSES[code] && new Date() <= new Date(LICENSES[code].expire)) {
@@ -534,13 +564,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
   
-  // ✅ Afficher la sélection des classes
   displayClassSelection();
-  
-  // ✅ Initialiser l'interface
   updateLicenseDisplay();
   
-  // ✅ Gestion des erreurs globale
+  // ✅ S'assurer que students est chargé même si on recharge la page
+  if (currentClass && currentLicense) {
+    const license = LICENSES[currentLicense];
+    if (license && license.classes.includes(currentClass)) {
+      // Vérifier si on a déjà accès à cette classe aujourd'hui
+      const today = new Date().toISOString().split('T')[0];
+      const accessKey = `access-${currentLicense}-${currentClass}-${today}`;
+      if (localStorage.getItem(accessKey)) {
+        document.getElementById('classSelection').style.display = 'none';
+        document.getElementById('mainNav').style.display = 'flex';
+        loadStudents();
+        loadPresenceStatus();
+        renderStudents();
+        showSection('presences');
+      }
+    }
+  }
+  
   window.addEventListener('error', (e) => {
     console.error('❌ Erreur critique:', e.error);
     alert('Une erreur est survenue. Rechargez la page.');
