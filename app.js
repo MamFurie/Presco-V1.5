@@ -592,16 +592,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // ===========================================
-// 🔄 CHANGER DE CLASSE (NOUVELLE FONCTION)
+// ⬅️ RETOUR À LA SÉLECTION DE CLASSE
 // ===========================================
 
-function changeClass() {
-  // Demander confirmation
-  const confirmChange = confirm('🔄 Voulez-vous vraiment changer de classe ?\n\nLes données de la classe actuelle seront sauvegardées.');
+function goBackToClassSelection() {
+  // ✅ Demande confirmation simple
+  if (!confirm('🔄 Retourner à la sélection des classes ?')) return;
   
-  if (!confirmChange) return;
-  
-  // Sauvegarder l'état actuel
+  // Sauvegarde automatique (silencieuse)
   try {
     const today = new Date().toISOString().split('T')[0];
     const presenceKey = `presco-${currentClass}-${today}`;
@@ -611,33 +609,27 @@ function changeClass() {
       data: status
     }));
   } catch (e) {
-    console.warn('Erreur sauvegarde backup:', e);
+    console.log('Backup non critique échoué:', e);
   }
   
-  // Réinitialiser l'interface
+  // ✅ Réinitialisation
   currentClass = null;
   students = [];
   status = {};
   
-  // Cacher les sections
+  // Cacher interface, montrer classes
   document.getElementById('mainNav').style.display = 'none';
-  document.getElementById('changeClassBtn').style.display = 'none';
+  document.getElementById('backBtn').style.display = 'none';
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   
-  // Réafficher le sélecteur de classe
   document.getElementById('classSelection').style.display = 'block';
-  document.getElementById('classAccessMessage').style.display = 'none';
-  
-  // Mettre à jour l'affichage
   document.getElementById('studentsList').innerHTML = '';
   document.getElementById('totalStudents').textContent = '0';
   document.getElementById('totalPresent').textContent = '0';
   document.getElementById('totalAbsent').textContent = '0';
   
-  // Afficher les classes disponibles
+  // Réafficher les classes disponibles
   displayClassSelection();
-  
-  console.log('✅ Retour au sélecteur de classe');
 }
 
 // ===========================================
@@ -661,18 +653,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   displayClassSelection();
   updateLicenseDisplay();
   
-  // ✅ S'assurer que students est chargé même si on recharge la page
+  // ✅ RESTAURER SESSION
   if (currentClass && currentLicense) {
     const license = LICENSES[currentLicense];
     if (license && license.classes.includes(currentClass)) {
       const today = new Date().toISOString().split('T')[0];
       const accessKey = `access-${currentLicense}-${currentClass}-${today}`;
-      
-      // ✅ VÉRIFICATION CLÉ : Si accès valide aujourd'hui, restaurer
       if (localStorage.getItem(accessKey)) {
         document.getElementById('classSelection').style.display = 'none';
         document.getElementById('mainNav').style.display = 'flex';
-        document.getElementById('changeClassBtn').style.display = 'block';
+        document.getElementById('backBtn').style.display = 'block'; // ✅ Afficher bouton retour
         
         loadStudents();
         loadPresenceStatus();
