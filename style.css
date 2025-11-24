@@ -315,3 +315,87 @@ body {
 .risk-low { background: rgba(0, 184, 148, 0.1); }
 .risk-medium { background: rgba(255, 167, 38, 0.1); }
 .risk-high { background: rgba(225, 112, 85, 0.1); }
+
+/* ===========================================
+   📚 SÉLECTION DE CLASSE
+   =========================================== */
+
+.class-selection {
+  background: #f8f9fa;
+  padding: 30px 20px;
+  margin: 20px auto;
+  max-width: 800px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.class-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin-top: 25px;
+}
+
+.class-btn {
+  padding: 20px;
+  background: #4361ee;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.class-btn:hover {
+  background: #3a56d4;
+  transform: translateY(-2px);
+}
+
+/* ===========================================
+   🔐 MESSAGE D'ERREUR
+   =========================================== */
+
+.class-access-message {
+  background: #fff3cd;
+  border: 2px solid #ffc107;
+  padding: 15px;
+  margin: 20px auto;
+  max-width: 600px;
+  border-radius: 8px;
+  color: #856404;
+  font-weight: bold;
+  text-align: center;
+}
+
+/* ===========================================
+   🧭 MENU DE NAVIGATION
+   =========================================== */
+
+.main-nav {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding: 15px;
+  background: white;
+  margin: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.nav-btn {
+  padding: 12px 24px;
+  border: none;
+  background: #e9ecef;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.3s;
+}
+
+.nav-btn.active {
+  background: #4361ee;
+  color: white;
+}

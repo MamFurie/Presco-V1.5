@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Presco - Présences</title>
+  <title>Presco - Gestion des présences</title>
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -11,24 +11,35 @@
   <!-- EN-TÊTE -->
   <header class="header">
     <h1>🎓 Presco</h1>
-    <p class="subtitle">Gestion des présences</p>
+    <p class="subtitle">Gestion des présences scolaires</p>
   </header>
 
   <!-- LICENCE & ACCÈS -->
   <div id="licensePanel" class="license-panel">
-    <p>🏫 <span id="schoolName">École</span></p>
+    <p>🏫 <span id="schoolName">En attente de licence...</span></p>
     <p>Code : <span id="licenseCode">----</span></p>
   </div>
 
-  <!-- MENU DE NAVIGATION -->
-  <nav class="main-nav">
-    <button class="nav-btn active" onclick="showSection('presences')">
+  <!-- SÉLECTION DE LA CLASSE (NOUVEAU BLOC) -->
+  <div id="classSelection" class="class-selection" style="display:none;">
+    <h2>📚 Sélectionnez votre classe</h2>
+    <div id="classButtons" class="class-buttons"></div>
+  </div>
+
+  <!-- MESSAGE D'ERREUR ACCÈS CLASSE (NOUVEAU BLOC) -->
+  <div id="classAccessMessage" class="class-access-message" style="display:none;">
+    <p id="accessMessageText"></p>
+  </div>
+
+  <!-- MENU DE NAVIGATION (masqué jusqu'à sélection de classe) -->
+  <nav id="mainNav" class="main-nav" style="display:none;">
+    <button class="nav-btn active" onclick="showSection('presences', event)">
       📋 Présences
     </button>
-    <button class="nav-btn" onclick="showSection('stats')">
+    <button class="nav-btn" onclick="showSection('stats', event)">
       📊 Statistiques
     </button>
-    <button class="nav-btn" onclick="showSection('export')">
+    <button class="nav-btn" onclick="showSection('export', event)">
       📤 Exports
     </button>
   </nav>
