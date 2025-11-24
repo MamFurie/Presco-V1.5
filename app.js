@@ -596,8 +596,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 // ===========================================
 
 function goBackToClassSelection() {
-  // ✅ Demande confirmation simple
-  if (!confirm('🔄 Retourner à la sélection des classes ?')) return;
+  
   
   // Sauvegarde automatique (silencieuse)
   try {

@@ -405,9 +405,9 @@ body {
    =========================================== */
 .back-btn {
   position: absolute;
-  top: 20px;
-  left: 20px; /* ✅ Changé de droite à gauche */
-  padding: 10px 20px;
+  top: 15px;
+  left: 15px; /* ✅ Changé de droite à gauche */
+  padding: 10px 5px;
   background: #6c757d; /* Couleur neutre */
   color: white;
   border: none;
